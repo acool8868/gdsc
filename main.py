@@ -5,11 +5,10 @@ import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
-TOKEN = "MTA5NTMyMjM5OTc3NzUwNTMyMQ.GqWWsK.qa30dsmlidrdvVEcX0iEKSnPBSrWTerFX9a8eM"
+TOKEN = os.getenv('DISCORD_TOKEN')
 openai.api_key = os.getenv('OPENAI_KEY')
 
-intents = discord.Intents.default()
-intents.members = True
+intents = discord.Intents.all()
 
 client = discord.Client(intents=intents)
 @client.event
@@ -21,20 +20,25 @@ async def on_message(message):
     username = str(message.author).split("#")[0]
     channel = str(message.channel.name)
     user_message = str(message.content)
-
-    print(message)
-
-    if user_message.lower() == "gpt":
-        await message.channel.send("chat")
+    if user_message.split(' ')[0].lower() == "help":
+        await message.channel.send("1. \'gpt\' + prompt\n2. \'rem\' + mm:hh (24 hour time) dd/mm/yyyy\n3. \'song\' + name")
+        return
+    elif user_message.split(' ')[0].lower() == "gpt":
+        await message.channel.send("[imagine chatgpt's reply here]")
+        superprompt = "You are a bot on discord, you must reply " \
+                      "is a short and precise manner. Only do as " \
+                      "you are told. You can add discord formatting" \
+                      ". I am " + username + "The prompt is :" + user_message
+        await message.channel.send(get_response(superprompt))
         return
     elif user_message.split(' ')[0].lower() == "rem":
-        print("time")
+
     elif user_message.split(' ')[0].lower() == "song":
         print("music")
 
 client.run(TOKEN)
 
-'''def get_response(prompt):
+def get_response(prompt):
     model_engine = "text-davinci-002"
     response = openai.Completion.create(
         engine=model_engine,
@@ -45,5 +49,6 @@ client.run(TOKEN)
         temperature=0.5,
     )
 
-    return response.choices[0].text.strip()'''
+    return str(response.choices[0].text.strip())
+
 
