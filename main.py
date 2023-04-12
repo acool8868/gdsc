@@ -6,11 +6,11 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 openai.api_key = os.getenv('OPENAI_KEY')
-client = discord.Client()
+client = discord.Bot()
 
 @client.event
 async def on_ready():
-    print(f'{client.user} is connected to the following guild:')
+    print("Logged in as a bot {0.user}".format(client))
 
 client.run(TOKEN)
 
@@ -27,3 +27,4 @@ def get_response(prompt):
     )
 
     return response.choices[0].text.strip()
+
