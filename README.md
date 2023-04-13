@@ -2,7 +2,6 @@
 gdsc_projects
 
 
-
 README file for Discord Bot with Chatgpt access and Reminders
 
 INTRODUCTION\
