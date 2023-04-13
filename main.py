@@ -15,14 +15,16 @@ openai.api_key = os.getenv('OPENAI_KEY')
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
-async def schedule_reminder(reminder_time, message1, message, count_t):
-    global timers
 
-    timers.append([reminder_time, message1, count_t])
-    now = datetime.datetime.now()
-    delta = (timers[0][0] - now).total_seconds()
-    await asyncio.sleep(delta)
-    await message.channel.send("Reminder " + timers[0][2] + ": It's now " + str(timers[0][0])+"\n"+ str(' '.join(timers[0][1])))
+async def schedule_reminder():
+    global timers
+    while timers != []:
+        now = datetime.datetime.now()
+        delta = (timers[0][0] - now).total_seconds()
+        print(timers)
+        await asyncio.sleep(delta)
+        await message.channel.send("Reminder " + str(timers[0][3]) + ": It's now " + str(timers[0][0])+"\n"+ str(' '.join(timers[0][1])))
+        timers.pop(0)
 
 
 @client.event
@@ -32,13 +34,18 @@ async def on_ready():
 @client.event
 async def on_message(message):
     global timer_counter
+    global timers
     username = str(message.author).split("#")[0]
     channel = str(message.channel.name)
     user_message = str(message.content)
-    if user_message.split(' ')[0].lower() == "help":
-        await message.channel.send("1. \'gpt\' + prompt\n2. \'rem\' + mm:hh::dd/mm/yyyy + message\n3. \'song\' + name")
+    messlist = user_message.split(' ')
+    if messlist[0].lower() == "help":
+        await message.channel.send("1. \'gpt\' + prompt\n2. \'remnew\' + time (mm:hh::dd/mm/yyyy) + "
+                                   "message\n3. \'remedit\' + serial number + new time (same format)"
+                                   "\n4. \'remdel\' + serial number\n4. \'song\' + "
+                                   "action(play, pause, queue, next) + name")
         return
-    elif user_message.split(' ')[0].lower() == "gpt":
+    elif messlist[0].lower() == "gpt":
         await message.channel.send("[imagine chatgpt's reply here]")
         superprompt = "You are a bot on discord, you must reply " \
                       "is a short and precise manner. Only do as " \
@@ -46,18 +53,31 @@ async def on_message(message):
                       ". I am " + username + "The prompt is :" + user_message
         await message.channel.send(get_response(superprompt))
         return
-    elif user_message.split(' ')[0].lower() == "rem":
+    elif messlist[0].lower() == "remnew":
         try:
-            reminder_time = datetime.datetime.strptime(user_message.split(' ')[1], '%H:%M::%d/%m/%Y')
-            reminder_mess = user_message.split(' ')[2::]
-            await message.channel.send("Reminder set for " + str(reminder_time))
+            reminder_time = datetime.datetime.strptime(messlist[1], '%H:%M::%d/%m/%Y')
+            reminder_mess = messlist[2::]
             timer_counter += 1
-            await schedule_reminder(reminder_time, reminder_mess, message, timer_counter)
+            await message.channel.send("Reminder (number " + str(timer_counter)+") set for " + str(reminder_time))
+            timers.append([reminder_time, reminder_mess, message, timer_counter])
+            if timers==[]:
+                schedule_reminder()
         except ValueError:
             await message.channel.send("Invalid reminder format. Please use the format \'rem HH:MM::DD/MM/YYYY (message)\'")
         return
-    elif user_message.split(' ')[0].lower() == "song":
+    elif messlist[0].lower() == "remedit":
+        for i in range(len(timers)):
+            if str(timers[i][3]) == messlist[1]:
+                timers[i][0] = datetime.datetime.strptime(messlist[2], '%H:%M::%d/%m/%Y')
+                return
+    elif messlist[0].lower() == "remdel":
+        for i in range(len(timers)):
+            if str(timers[i][3]) == messlist[1]:
+                timers.pop(i)
+                return
+    elif messlist[0].lower() == "song":
         print("music")
+        return
 
 client.run(TOKEN)
 
@@ -73,7 +93,4 @@ def get_response(prompt):
     )
 
     return str(response.choices[0].text.strip())
-
-
-
 
