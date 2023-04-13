@@ -5,7 +5,9 @@ import datetime
 import asyncio
 from dotenv import load_dotenv
 
+timers = []
 reminder_mess = ""
+timer_counter = 0
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 openai.api_key = os.getenv('OPENAI_KEY')
@@ -13,17 +15,23 @@ openai.api_key = os.getenv('OPENAI_KEY')
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
-async def schedule_reminder(reminder_time, message1, message):
+async def schedule_reminder(reminder_time, message1, message, count_t):
+    global timers
+
+    timers.append([reminder_time, message1, count_t])
     now = datetime.datetime.now()
-    delta = (reminder_time - now).total_seconds()
+    delta = (timers[0][0] - now).total_seconds()
     await asyncio.sleep(delta)
-    await message.channel.send("Reminder: It's now " + str(reminder_time)+"\n"+ str(' '.join(message1)))
+    await message.channel.send("Reminder " + timers[0][2] + ": It's now " + str(timers[0][0])+"\n"+ str(' '.join(timers[0][1])))
+
+
 @client.event
 async def on_ready():
     print("Logged in as a bot {0.user}".format(client))
 
 @client.event
 async def on_message(message):
+    global timer_counter
     username = str(message.author).split("#")[0]
     channel = str(message.channel.name)
     user_message = str(message.content)
@@ -43,7 +51,8 @@ async def on_message(message):
             reminder_time = datetime.datetime.strptime(user_message.split(' ')[1], '%H:%M::%d/%m/%Y')
             reminder_mess = user_message.split(' ')[2::]
             await message.channel.send("Reminder set for " + str(reminder_time))
-            await schedule_reminder(reminder_time, reminder_mess, message)
+            timer_counter += 1
+            await schedule_reminder(reminder_time, reminder_mess, message, timer_counter)
         except ValueError:
             await message.channel.send("Invalid reminder format. Please use the format \'rem HH:MM::DD/MM/YYYY (message)\'")
         return
