@@ -60,9 +60,14 @@ async def on_message(message):
             reminder_mess = messlist[2::]
             timer_counter += 1
             await message.channel.send("Reminder (number " + str(timer_counter)+") set for " + str(reminder_time))
-            for i in range(len(timers)):
-                if not timers[i][0] < reminder_time:
-                    timers.insert(i, [reminder_time, reminder_mess, message, timer_counter])
+            if len(timers) != 0:
+                for i in range(len(timers)):
+                    if not timers[i][0] < reminder_time:
+                        timers.insert(i, [reminder_time, reminder_mess, message, timer_counter])
+                    else:
+                        timers.append([reminder_time, reminder_mess, message, timer_counter])
+            else:
+                timers.append([reminder_time, reminder_mess, message, timer_counter])
             print(timers)
             if len(timers)==1:
                 await schedule_reminder(message)
@@ -79,6 +84,10 @@ async def on_message(message):
                 for j in range(len(timers)):
                     if not timers[j][0] < temptimer[0]:
                         timers.insert(j, temptimer)
+                        print(timers)
+                        return
+                    else:
+                        timers.append(temptimer)
                         print(timers)
                         return
     elif messlist[0].lower() == "remdel":
