@@ -16,8 +16,9 @@ intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
 
-async def schedule_reminder():
+async def schedule_reminder(message):
     global timers
+    print(timers)
     while timers != []:
         now = datetime.datetime.now()
         delta = (timers[0][0] - now).total_seconds()
@@ -60,8 +61,9 @@ async def on_message(message):
             timer_counter += 1
             await message.channel.send("Reminder (number " + str(timer_counter)+") set for " + str(reminder_time))
             timers.append([reminder_time, reminder_mess, message, timer_counter])
-            if timers==[]:
-                schedule_reminder()
+            print(timers)
+            if len(timers)==1:
+                await schedule_reminder(message)
         except ValueError:
             await message.channel.send("Invalid reminder format. Please use the format \'rem HH:MM::DD/MM/YYYY (message)\'")
         return
@@ -69,11 +71,13 @@ async def on_message(message):
         for i in range(len(timers)):
             if str(timers[i][3]) == messlist[1]:
                 timers[i][0] = datetime.datetime.strptime(messlist[2], '%H:%M::%d/%m/%Y')
+                print(timers)
                 return
     elif messlist[0].lower() == "remdel":
         for i in range(len(timers)):
             if str(timers[i][3]) == messlist[1]:
                 timers.pop(i)
+                print(timers)
                 return
     elif messlist[0].lower() == "song":
         print("music")
