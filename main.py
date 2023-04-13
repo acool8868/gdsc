@@ -43,7 +43,7 @@ async def on_message(message):
     if messlist[0].lower() == "help":
         await message.channel.send("1. \'gpt\' + prompt\n2. \'remnew\' + time (mm:hh::dd/mm/yyyy) + "
                                    "message\n3. \'remedit\' + serial number + new time (same format)"
-                                   "\n4. \'remdel\' + serial number\n4. \'song\' + "
+                                   "\n4. \'remdel\' + serial number\n5. \'song\' + "
                                    "action(play, pause, queue, next) + name")
         return
     elif messlist[0].lower() == "gpt":
@@ -60,19 +60,27 @@ async def on_message(message):
             reminder_mess = messlist[2::]
             timer_counter += 1
             await message.channel.send("Reminder (number " + str(timer_counter)+") set for " + str(reminder_time))
-            timers.append([reminder_time, reminder_mess, message, timer_counter])
+            for i in range(len(timers)):
+                if not timers[i][0] < reminder_time:
+                    timers.insert(i, [reminder_time, reminder_mess, message, timer_counter])
             print(timers)
             if len(timers)==1:
                 await schedule_reminder(message)
         except ValueError:
-            await message.channel.send("Invalid reminder format. Please use the format \'rem HH:MM::DD/MM/YYYY (message)\'")
+            await message.channel.send("Invalid reminder format. Please use the "
+                                       "format \'rem HH:MM::DD/MM/YYYY (message)\'")
         return
     elif messlist[0].lower() == "remedit":
         for i in range(len(timers)):
             if str(timers[i][3]) == messlist[1]:
                 timers[i][0] = datetime.datetime.strptime(messlist[2], '%H:%M::%d/%m/%Y')
-                print(timers)
-                return
+                temptimer = timers[i]
+                timers.pop(i)
+                for j in range(len(timers)):
+                    if not timers[j][0] < temptimer[0]:
+                        timers.insert(j, temptimer)
+                        print(timers)
+                        return
     elif messlist[0].lower() == "remdel":
         for i in range(len(timers)):
             if str(timers[i][3]) == messlist[1]:
@@ -97,4 +105,5 @@ def get_response(prompt):
     )
 
     return str(response.choices[0].text.strip())
+
 
